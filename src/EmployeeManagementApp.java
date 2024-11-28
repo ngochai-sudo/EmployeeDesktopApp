@@ -139,36 +139,50 @@ public class EmployeeManagementApp {
     }
 
     private static void viewEmployees() {
-        String[] options = {
-            "List All Employees",
-            "Count Employees by Department",
-            "Search by Employee Name",
-            "List Employees by Department"
-        };
-        String choice = (String) JOptionPane.showInputDialog(
-            null,
-            "Choose an option",
-            "View Employees",
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
-        if (choice == null) return;
-        switch (choice) {
-            case "List All Employees":
-                listAllEmployees();
-                break;
-            case "Count Employees by Department":
-                countEmployeesByDepartment();
-                break;
-            case "Search by Employee Name":
-                searchEmployeeByName();
-                break;
-            case "List Employees by Department":
-                listEmployeesByDepartment();
-                break;
-        }
+        JFrame frame = new JFrame("View Employees");
+        frame.setSize(300,300);
+        frame.setLayout(new BorderLayout());
+
+        JPanel optionsPanel = new JPanel(new GridLayout(4,1,10,10));
+        JButton listAllButton = new JButton("List All Employees");
+        JButton countByDeptButton = new JButton("Count Employees by Department");
+        JButton searchByNameButton = new JButton("Search by Employee name");
+        JButton listByDeptButton = new JButton("List Employees by Department");
+
+        optionsPanel.add(listAllButton);
+        optionsPanel.add(countByDeptButton);
+        optionsPanel.add(searchByNameButton);
+        optionsPanel.add(listByDeptButton);
+
+        JButton backButton = new JButton("Back");
+        JPanel backPanel = new JPanel();
+        backPanel.add(backButton);
+
+        frame.add(optionsPanel, BorderLayout.CENTER);
+        frame.add(backPanel, BorderLayout.SOUTH);
+
+        listAllButton.addActionListener(e -> {
+            listAllEmployees();
+        });
+
+        countByDeptButton.addActionListener(e -> {
+            countEmployeesByDepartment();
+        });
+
+        searchByNameButton.addActionListener(e -> {
+            searchEmployeeByName();
+        });
+
+        listByDeptButton.addActionListener(e -> {
+            listEmployeesByDepartment();
+        });
+
+        backButton.addActionListener(e -> {
+            frame.dispose();
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 
     private static void listAllEmployees() {
@@ -300,6 +314,7 @@ public class EmployeeManagementApp {
 
     private static void updateEmployee() {
         String idStr = JOptionPane.showInputDialog("Enter Employee ID to update:");
+        if (idStr == null) return;
         Integer id = parseIntegerInput(idStr);
         if (id == null) return;
 
