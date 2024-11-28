@@ -51,7 +51,11 @@ public class EmployeeManagementApp {
         panel.add(passLabel);
         panel.add(passField);
 
+        JPanel buttonPanel = new JPanel(new GridLayout(1,2,10,10));
         JButton logiButton = new JButton("Login");
+        JButton exitButton = new JButton("Exit");
+        buttonPanel.add(logiButton);
+        buttonPanel.add(exitButton);
         JLabel statLabel = new JLabel("", SwingConstants.CENTER);
 
         logiButton.addActionListener(e -> {
@@ -65,6 +69,17 @@ public class EmployeeManagementApp {
             }
         });
 
+        exitButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(
+                frame,
+                "Are you sure to exit?",
+                "Exit", 
+                JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                frame.dispose();
+            }
+        });
+
         userField.addActionListener(e -> {
             logiButton.doClick();
         });
@@ -74,7 +89,7 @@ public class EmployeeManagementApp {
         });
 
         frame.add(panel, BorderLayout.CENTER);
-        frame.add(logiButton, BorderLayout.SOUTH);
+        frame.add(buttonPanel, BorderLayout.SOUTH);
         frame.add(statLabel, BorderLayout.NORTH);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
