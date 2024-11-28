@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -281,9 +282,10 @@ public class EmployeeManagementApp {
     private static void addEmployee() {
         JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
-        JTextField departmentField = new JTextField();
-        JTextField positionField = new JTextField();
-
+        String[] departments = {"Human Resource", "IT Department", "Sales", "Account", "Finance"};
+        JComboBox<String> departmentField = new JComboBox<>(departments);
+        String[] positions = {"Manager", "Staff", "Analyst"};
+        JComboBox<String> positionField = new JComboBox<>(positions);
         Object[] message = {
             "Employee ID:", idField,
             "Employee Name:", nameField,
@@ -296,9 +298,13 @@ public class EmployeeManagementApp {
             try {
                 Integer id = parseIntegerInput(idField.getText());
                 if (id == null) return;
-                String name = nameField.getText();
-                String department = departmentField.getText();
-                String position = positionField.getText();
+                String name = nameField.getText().trim();
+                String department = (String) departmentField.getSelectedItem();
+                String position = (String) positionField.getSelectedItem();
+                if(name.isBlank()) {
+                    JOptionPane.showMessageDialog(null, "All fields must be filled", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 boolean exist = employees.stream().anyMatch(employee -> employee.getId() == id);
                 if (exist) {
                     JOptionPane.showMessageDialog(null, "Employee ID already exist!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -321,9 +327,12 @@ public class EmployeeManagementApp {
         Employee employee = findEmployeeById(id);
         if (employee != null) {
             JTextField nameField = new JTextField(employee.getName());
-            JTextField departmentField = new JTextField(employee.getDepartment());
-            JTextField positionField = new JTextField(employee.getPosition());
-
+            String [] departments = {"Human Resource", "IT Department", "Sales", "Account", "Finance"};
+            JComboBox<String> departmentField = new JComboBox<>(departments);
+            departmentField.setSelectedItem(employee.getDepartment());
+            String[] positions = {"Manager", "Staff", "Analyst"};
+            JComboBox<String> positionField = new JComboBox<>(positions);
+            positionField.setSelectedItem(employee.getPosition());
             Object[] message = {
                 "Employee Name:", nameField,
                 "Department:", departmentField,
@@ -332,9 +341,17 @@ public class EmployeeManagementApp {
 
             int option = JOptionPane.showConfirmDialog(null, message, "Update Employee", JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
-                employee.setName(nameField.getText());
-                employee.setDepartment(departmentField.getText());
-                employee.setPosition(positionField.getText());
+                String name = nameField.getText().trim();
+                String department = (String) departmentField.getSelectedItem();
+                String position = (String) positionField.getSelectedItem();
+                if (name.isBlank()) {
+                    JOptionPane.showMessageDialog(null, "All fields must be filled", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                employee.setName(name);
+                employee.setDepartment(department);
+                employee.setPosition(position);
+                JOptionPane.showMessageDialog(null, "Employee updated successfully");
             }
         } else {
             JOptionPane.showMessageDialog(null, "Employee not found!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -343,6 +360,7 @@ public class EmployeeManagementApp {
 
     private static void deleteEmployee() {
         String idStr = JOptionPane.showInputDialog("Enter Employee ID to delete:");
+        if (idStr == null) return;
         Integer id = parseIntegerInput(idStr);
         if (id == null) return;
 
@@ -377,7 +395,7 @@ public class EmployeeManagementApp {
     }
 
     private static void loadCredentials(String fileName) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("users.txt"))){
+        try (BufferedReader reader = new BufferedReader(new FileReader(USER_FILE))){
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
@@ -416,8 +434,11 @@ public class EmployeeManagementApp {
     }
 
     private static Integer parseIntegerInput(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            System.out.println("Don't leave blank text");   
+        }
         try {
-            return Integer.parseInt(input);
+            return Integer.parseInt(input.trim());
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(null, "Invalid input. Please enter a numeric value.", "Error", JOptionPane.ERROR_MESSAGE);
             return null;
