@@ -1,0 +1,396 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+
+import java.awt.*;
+
+public class EmployeeManagementApp {
+    private static Map<String, String> userCredentials = new HashMap<>();
+    private static List<Employee> employees = new ArrayList<>();
+    private static final String USER_FILE = "users.txt";
+    private static final String EMPLOYEES_FILE = "employee.txt";
+    public static void main(String[] args) {
+        loadCredentials(USER_FILE);
+        loadEmployees(EMPLOYEES_FILE);
+
+        SwingUtilities.invokeLater(() -> {
+            createLoginUI();
+        });
+    }
+
+    private static void createLoginUI() {
+        JFrame frame = new JFrame("Login System");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 200);
+        frame.setLayout(new BorderLayout());
+
+        JPanel panel = new JPanel(new GridLayout(3,2,10,10));
+        JLabel userLabel = new JLabel("Username:");
+        JTextField userField = new JTextField();
+        JLabel passLabel = new JLabel("Password:");
+        JPasswordField passField = new JPasswordField();
+
+        panel.add(userLabel);
+        panel.add(userField);
+        panel.add(passLabel);
+        panel.add(passField);
+
+        JButton logiButton = new JButton("Login");
+        JLabel statLabel = new JLabel("", SwingConstants.CENTER);
+
+        logiButton.addActionListener(e -> {
+            String username = userField.getText();
+            String password = new String(passField.getPassword());
+            if (validateLogin(username, password)) {
+                frame.dispose();
+                createEmployeeManagementUI();
+            } else {
+                statLabel.setText("Invalid username or password");
+            }
+        });
+
+        userField.addActionListener(e -> {
+            logiButton.doClick();
+        });
+
+        passField.addActionListener(e -> {
+            logiButton.doClick();
+        });
+
+        frame.add(panel, BorderLayout.CENTER);
+        frame.add(logiButton, BorderLayout.SOUTH);
+        frame.add(statLabel, BorderLayout.NORTH);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private static void createEmployeeManagementUI() {
+        JFrame frame = new JFrame("Employee Management");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 400);
+        frame.setLayout(new BorderLayout());
+
+        JPanel panel = new JPanel(new GridLayout(5,1,10,10));
+        JButton viewButton = new JButton("View Employees");
+        JButton addButton = new JButton("Add Employee");
+        JButton updateButton = new JButton("Update Employee");
+        JButton deleteButton = new JButton("Delete Employee");
+        JButton saveButton = new JButton("Save Employee");
+        JButton logoutButton = new JButton("Log Out");
+
+        panel.add(viewButton);
+        panel.add(addButton);
+        panel.add(updateButton);
+        panel.add(deleteButton);
+        panel.add(saveButton);
+        panel.add(logoutButton);
+
+        frame.add(panel, BorderLayout.CENTER);
+
+        viewButton.addActionListener(e -> viewEmployees());
+        addButton.addActionListener(e -> addEmployee());
+        updateButton.addActionListener(e -> updateEmployee());
+        deleteButton.addActionListener(e -> deleteEmployee());
+        saveButton.addActionListener(e -> saveEmployee());
+        logoutButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(frame, 
+                    "Are you sure to logout?", 
+                    "Logout Confirmation",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                frame.dispose();
+                createLoginUI();
+            }
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private static void viewEmployees() {
+        String[] options = {
+            "List All Employees",
+            "Count Employees by Department",
+            "Search by Employee Name",
+            "List Employees by Department"
+        };
+        String choice = (String) JOptionPane.showInputDialog(
+            null,
+            "Choose an option",
+            "View Employees",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
+        if (choice == null) return;
+        switch (choice) {
+            case "List All Employees":
+                listAllEmployees();
+                break;
+            case "Count Employees by Department":
+                countEmployeesByDepartment();
+                break;
+            case "Search by Employee Name":
+                searchEmployeeByName();
+                break;
+            case "List Employees by Department":
+                listEmployeesByDepartment();
+                break;
+        }
+    }
+
+    private static void listAllEmployees() {
+        if (employees.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No employee to display.", "List All Employees", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        StringBuilder message = new StringBuilder("Employee List:\n");
+        for (Employee employee : employees) {
+            message.append(employee).append("\n");
+        }
+        JOptionPane.showMessageDialog(null, message.toString(), "List All Employees", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private static void countEmployeesByDepartment() {
+        List<String> departments = employees.stream()
+                                            .map(Employee::getDepartment)
+                                            .distinct()
+                                            .toList();
+        if (departments.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No departments available.", "Count Employees by Department", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String department = (String) JOptionPane.showInputDialog(
+            null,
+            "Select a Department:",
+            "Count Employees by Department",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            departments.toArray(),
+            departments.get(0)
+        );
+        if (department == null) return;
+        long count = employees.stream()
+                              .filter(employee -> employee.getDepartment().equalsIgnoreCase(department))
+                              .count();
+        StringBuilder message = new StringBuilder("Employees in " + department + ":\n");
+        employees.stream()
+                 .filter(employee -> employee.getDepartment().equalsIgnoreCase(department))
+                 .forEach(employee -> message.append(employee).append("\n"));
+        message.append("\nTotal count: ").append(count);
+        JOptionPane.showMessageDialog(null, message.toString(), "Count Employees by Department", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private static void searchEmployeeByName() {
+        String name = JOptionPane.showInputDialog("Enter employee name to search: ");
+        if (name == null || name.trim().isEmpty()) return;
+        List<Employee> found = employees.stream()
+                                        .filter(employee -> employee.getName().toLowerCase().contains(name.trim().toLowerCase()))
+                                        .toList();
+        if (found.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No employee found with name: " + name, "Search by Employee name", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            StringBuilder message = new StringBuilder("Employees found:\n");
+            for (Employee employee : found) {
+                message.append(employee).append("\n");
+            }
+            JOptionPane.showMessageDialog(null, message.toString(), "Search by Employee name", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private static void listEmployeesByDepartment() {
+        List<String> departments = employees.stream()
+                                            .map(Employee::getDepartment)
+                                            .distinct()
+                                            .toList();
+        if (departments.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No departments available.", 
+                                      "List Employees by Department", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String department = (String) JOptionPane.showInputDialog(
+            null,
+            "Select Department:",
+            "List Employees by Department",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            departments.toArray(),
+            departments.get(0)
+        );
+        if (department == null) return;
+        List<Employee> found = employees.stream()
+                                        .filter(employee -> employee.getDepartment().equalsIgnoreCase(department))
+                                        .toList();
+        if (found.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No employees found in department: " + department, "List Employees by Department", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            StringBuilder message = new StringBuilder("Employees in " + department + ":\n");
+            found.forEach(employee -> message.append(employee).append("\n"));
+            JOptionPane.showMessageDialog(null, message.toString(), "List Employees by Department", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private static void addEmployee() {
+        JTextField idField = new JTextField();
+        JTextField nameField = new JTextField();
+        JTextField departmentField = new JTextField();
+        JTextField positionField = new JTextField();
+
+        Object[] message = {
+            "Employee ID:", idField,
+            "Employee Name:", nameField,
+            "Department:", departmentField,
+            "Position:", positionField
+        };
+
+        int option = JOptionPane.showConfirmDialog(null, message, "Add Employee", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                Integer id = parseIntegerInput(idField.getText());
+                if (id == null) return;
+                String name = nameField.getText();
+                String department = departmentField.getText();
+                String position = positionField.getText();
+                boolean exist = employees.stream().anyMatch(employee -> employee.getId() == id);
+                if (exist) {
+                    JOptionPane.showMessageDialog(null, "Employee ID already exist!", "Error", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    employees.add(new Employee(id, name, department, position));
+                    JOptionPane.showMessageDialog(null, "Employee added successfully");
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid ID, Please enter number.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private static void updateEmployee() {
+        String idStr = JOptionPane.showInputDialog("Enter Employee ID to update:");
+        Integer id = parseIntegerInput(idStr);
+        if (id == null) return;
+
+        Employee employee = findEmployeeById(id);
+        if (employee != null) {
+            JTextField nameField = new JTextField(employee.getName());
+            JTextField departmentField = new JTextField(employee.getDepartment());
+            JTextField positionField = new JTextField(employee.getPosition());
+
+            Object[] message = {
+                "Employee Name:", nameField,
+                "Department:", departmentField,
+                "Position:", positionField
+            };
+
+            int option = JOptionPane.showConfirmDialog(null, message, "Update Employee", JOptionPane.OK_CANCEL_OPTION);
+            if (option == JOptionPane.OK_OPTION) {
+                employee.setName(nameField.getText());
+                employee.setDepartment(departmentField.getText());
+                employee.setPosition(positionField.getText());
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "Employee not found!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static void deleteEmployee() {
+        String idStr = JOptionPane.showInputDialog("Enter Employee ID to delete:");
+        Integer id = parseIntegerInput(idStr);
+        if (id == null) return;
+
+        Employee employee = findEmployeeById(id);
+        if (employee != null) {
+            employees.remove(employee);
+            JOptionPane.showMessageDialog(null, "Employee deleted successfully.", "Delete Employee", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null, "Employee not found!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static void saveEmployee() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(EMPLOYEES_FILE))) {
+            for (Employee employee : employees) {
+                writer.write(employee.getId() + "," + employee.getName() + "," + employee.getDepartment() + "," + employee.getPosition());
+                writer.newLine();
+            }
+            JOptionPane.showMessageDialog(null, "Employees saved successfully!", "Save Employees", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error saving employees!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static Employee findEmployeeById(int id) {
+        for (Employee employee : employees) {
+            if (employee.getId() == id) {
+                return employee;
+            }
+        }
+        return null;
+    }
+
+    private static void loadCredentials(String fileName) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("users.txt"))){
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 2) {
+                    userCredentials.put(parts[0].trim(), parts[1].trim());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading credentials: " + e.getMessage());
+        }
+    }
+
+    private static void loadEmployees(String fileName) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(EMPLOYEES_FILE))){
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 4) {
+                    int id = Integer.parseInt(parts[0].trim());
+                    String name = parts[1].trim();
+                    String department = parts[2].trim();
+                    String position = parts[3].trim();
+                    employees.add(new Employee(id, name, department, position));
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading employees: " + e.getMessage());
+        }
+    }
+
+    private static boolean validateLogin(String username, String password) {
+        if (username == null || password == null || username.isBlank() || password.isBlank()) {
+            return false;
+        }
+        return userCredentials.getOrDefault(username, "").equals(password);
+    }
+
+    private static Integer parseIntegerInput(String input) {
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid input. Please enter a numeric value.", "Error", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+}

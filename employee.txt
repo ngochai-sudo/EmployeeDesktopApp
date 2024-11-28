@@ -1,0 +1,4 @@
+1,Dinh Ngoc Hai,IT Department,Manager
+2,Nguyen Van Hung,Account,Manager
+3,Nguyen Thi Hoai Nhung,Human Resource,Manager
+4,Alan Smith,Finance,Manager
