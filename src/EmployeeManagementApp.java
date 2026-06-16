@@ -283,6 +283,16 @@ public class EmployeeManagementApp {
     }
 
     private static void addEmployee() {
+
+        if (!currentRole.equalsIgnoreCase("admin")) {
+        JOptionPane.showMessageDialog(
+                null,
+                "You do not have permission to add employees!",
+                "Access Denied",
+                JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
         JTextField idField = new JTextField();
         JTextField nameField = new JTextField();
         String[] departments = {"Human Resource", "IT Department", "Sales", "Account", "Finance"};
