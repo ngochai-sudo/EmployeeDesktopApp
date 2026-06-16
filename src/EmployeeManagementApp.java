@@ -26,6 +26,8 @@ public class EmployeeManagementApp {
     private static List<Employee> employees = new ArrayList<>();
     private static final String USER_FILE = "users.txt";
     private static final String EMPLOYEES_FILE = "employee.txt";
+    private static String currentRole = "";
+    private static Map<String, String> userRole = new HashMap<>();
     public static void main(String[] args) {
         loadCredentials(USER_FILE);
         loadEmployees(EMPLOYEES_FILE);
@@ -63,6 +65,7 @@ public class EmployeeManagementApp {
             String username = userField.getText();
             String password = new String(passField.getPassword());
             if (validateLogin(username, password)) {
+                currentRole = userRole.get(username);
                 frame.dispose();
                 createEmployeeManagementUI();
             } else {
@@ -319,6 +322,15 @@ public class EmployeeManagementApp {
     }
 
     private static void updateEmployee() {
+
+        if (!currentRole.equalsIgnoreCase("admin")) {
+        JOptionPane.showMessageDialog(
+                null,
+                "You do not have permission to update employees!",
+                "Access Denied",
+                JOptionPane.ERROR_MESSAGE);
+        return;
+    }
         String idStr = JOptionPane.showInputDialog("Enter Employee ID to update:");
         if (idStr == null) return;
         Integer id = parseIntegerInput(idStr);
@@ -359,19 +371,39 @@ public class EmployeeManagementApp {
     }
 
     private static void deleteEmployee() {
-        String idStr = JOptionPane.showInputDialog("Enter Employee ID to delete:");
-        if (idStr == null) return;
-        Integer id = parseIntegerInput(idStr);
-        if (id == null) return;
 
-        Employee employee = findEmployeeById(id);
-        if (employee != null) {
-            employees.remove(employee);
-            JOptionPane.showMessageDialog(null, "Employee deleted successfully.", "Delete Employee", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(null, "Employee not found!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+    if (!currentRole.equalsIgnoreCase("admin")) {
+        JOptionPane.showMessageDialog(
+                null,
+                "You do not have permission to delete employees!",
+                "Access Denied",
+                JOptionPane.ERROR_MESSAGE);
+        return;
     }
+
+    String idStr = JOptionPane.showInputDialog("Enter Employee ID to delete:");
+    if (idStr == null) return;
+
+    Integer id = parseIntegerInput(idStr);
+    if (id == null) return;
+
+    Employee employee = findEmployeeById(id);
+
+    if (employee != null) {
+        employees.remove(employee);
+        JOptionPane.showMessageDialog(
+                null,
+                "Employee deleted successfully.",
+                "Delete Employee",
+                JOptionPane.INFORMATION_MESSAGE);
+    } else {
+        JOptionPane.showMessageDialog(
+                null,
+                "Employee not found!",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     private static void saveEmployee() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(EMPLOYEES_FILE))) {
@@ -395,17 +427,24 @@ public class EmployeeManagementApp {
     }
 
     private static void loadCredentials(String fileName) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(USER_FILE))){
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length == 2) {
-                    userCredentials.put(parts[0].trim(), parts[1].trim());
-                }
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split(",");
+
+            if (parts.length == 3) {
+                String username = parts[0].trim();
+                String password = parts[1].trim();
+                String role = parts[2].trim();
+
+                userCredentials.put(username, password);
+                userRole.put(username, role);
             }
-        } catch (IOException e) {
-            System.out.println("Error loading credentials: " + e.getMessage());
         }
+    } catch (IOException e) {
+        System.out.println("Error loading credentials: " + e.getMessage());
+    }
     }
 
     private static void loadEmployees(String fileName) {

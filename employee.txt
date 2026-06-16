@@ -3,3 +3,4 @@
 3,Nguyen Thi Hoai Nhung,Human Resource,Manager
 4,Alan Smith,Finance,Manager
 5,Duong Van Quy,IT Department,Staff
+6,Nguyen Van A,IT Department,Analyst
