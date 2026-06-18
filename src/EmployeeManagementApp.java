@@ -198,7 +198,7 @@ public class EmployeeManagementApp {
         } else {
             panel.add(viewButton);
             panel.add(logoutButton);
-}
+        }
 
         frame.add(panel, BorderLayout.CENTER);
 
