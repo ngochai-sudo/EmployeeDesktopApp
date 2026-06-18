@@ -54,10 +54,12 @@ public class EmployeeManagementApp {
         panel.add(passLabel);
         panel.add(passField);
 
-        JPanel buttonPanel = new JPanel(new GridLayout(1,2,10,10));
+        JPanel buttonPanel = new JPanel(new GridLayout(1,3,10,10));
         JButton logiButton = new JButton("Login");
+        JButton registerButton = new JButton("Register");
         JButton exitButton = new JButton("Exit");
         buttonPanel.add(logiButton);
+        buttonPanel.add(registerButton);
         buttonPanel.add(exitButton);
         JLabel statLabel = new JLabel("", SwingConstants.CENTER);
 
@@ -71,6 +73,10 @@ public class EmployeeManagementApp {
             } else {
                 statLabel.setText("Invalid username or password");
             }
+        });
+
+        registerButton.addActionListener(e -> {
+            registerUser();
         });
 
         exitButton.addActionListener(e -> {
@@ -99,6 +105,65 @@ public class EmployeeManagementApp {
         frame.setVisible(true);
     }
 
+    private static void registerUser() {
+        JTextField usernameField = new JTextField();
+        JPasswordField passwordField = new JPasswordField();
+
+        String[] roles = {"user", "admin"};
+        JComboBox<String> roleBox = new JComboBox<>(roles);
+
+        Object[] message = {
+            "Username:", usernameField,
+            "Password:", passwordField,
+            "Role:", roleBox
+        };
+
+        int option = JOptionPane.showConfirmDialog(
+            null, 
+            message,
+            "Register",
+            JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            String username = usernameField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
+            String role = (String) roleBox.getSelectedItem();
+
+            if (username.isBlank() || password.isBlank()) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Username and Password cannot be empty!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            userCredentials.put(username, password);
+            userRole.put(username, role);
+
+            saveUser(username, password, role);
+
+            JOptionPane.showMessageDialog(
+                null, 
+                "Register Successfully!",
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private static void saveUser(String username, String password, String role) {
+        try (BufferedWriter writer = 
+            new BufferedWriter(new FileWriter(USER_FILE, true))) {
+            writer.write(username + "," + password + "," + role);
+            writer.newLine();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(
+                null, 
+                "Error saving user!",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private static void createEmployeeManagementUI() {
         JFrame frame = new JFrame("Employee Management");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -113,12 +178,27 @@ public class EmployeeManagementApp {
         JButton saveButton = new JButton("Save Employee");
         JButton logoutButton = new JButton("Log Out");
 
-        panel.add(viewButton);
-        panel.add(addButton);
-        panel.add(updateButton);
-        panel.add(deleteButton);
-        panel.add(saveButton);
-        panel.add(logoutButton);
+        if (currentRole.equalsIgnoreCase("user")) {
+            panel.remove(addButton);
+            panel.remove(updateButton);
+            panel.remove(deleteButton);
+            panel.remove(saveButton);
+
+            panel.revalidate();
+            panel.repaint();
+        }
+
+        if (currentRole.equalsIgnoreCase("admin")) {
+            panel.add(viewButton);
+            panel.add(addButton);
+            panel.add(updateButton);
+            panel.add(deleteButton);
+            panel.add(saveButton);
+            panel.add(logoutButton);
+        } else {
+            panel.add(viewButton);
+            panel.add(logoutButton);
+}
 
         frame.add(panel, BorderLayout.CENTER);
 
