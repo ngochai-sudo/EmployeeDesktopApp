@@ -1,2 +1,3 @@
 admin,admin123,admin
-user1,password1,userhai,123,admin
+user1,password1,user
+hai,123,admin

@@ -153,7 +153,7 @@ public class EmployeeManagementApp {
     private static void saveUser(String username, String password, String role) {
         try (BufferedWriter writer = 
             new BufferedWriter(new FileWriter(USER_FILE, true))) {
-            writer.write(username + "," + password + "," + role);
+            writer.write(username + "," + password + "," + role + "\n");
             writer.newLine();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(
